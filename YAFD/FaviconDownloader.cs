@@ -246,7 +246,7 @@ namespace YetAnotherFaviconDownloader
                 else
                 {
                     throw new FaviconDownloaderException(ex);
-               }
+                }
             }
 
             // If there is no file available
@@ -307,7 +307,7 @@ namespace YetAnotherFaviconDownloader
             try
             {
                 response = base.GetWebResponse(request);
-                // keeps track about base path 
+                // keeps track about base path
                 responseUri = response.ResponseUri;
             }
             catch (WebException)
@@ -356,21 +356,38 @@ namespace YetAnotherFaviconDownloader
             return null;
         }
 
+        // Removes "user:pass@" from absolute URLs by clearing out the UserInfo
+        private static void StripUserInfo(ref string url)
+        {
+            Uri u;
+            if (!Uri.TryCreate(url, UriKind.Absolute, out u))
+                return;
+            if (string.IsNullOrEmpty(u.UserInfo))
+                return;
+
+            var builder = new UriBuilder(u)
+            {
+                UserName = string.Empty,
+                Password = string.Empty
+            };
+            url = builder.Uri.ToString();
+            Util.Log("StripUserInfo => {0}", url);
+        }
+
         private bool IsValidURL(ref string url, string prefix)
         {
             if (!httpSchema.IsMatch(url))
             {
-                // If the user doesn't want to add the prefix, there is nothing I can do about
                 if (!YetAnotherFaviconDownloaderExt.Config.GetAutomaticPrefixURLs())
-                {
                     return false;
-                }
 
-                // Prefix the URL with a valid schema
                 string old = url;
                 url = prefix + url;
                 Util.Log("AutoPrefix: {0} => {1}", old, url);
             }
+
+            // ensure credentials are never sent (only for HTTP/HTTPS URIs; other schemes are not processed)
+            StripUserInfo(ref url);
 
             Uri result;
             return Uri.TryCreate(url, UriKind.Absolute, out result);

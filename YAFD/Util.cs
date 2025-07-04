@@ -5,6 +5,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.IO;
 
 namespace YetAnotherFaviconDownloader
 {
@@ -83,10 +84,26 @@ namespace YetAnotherFaviconDownloader
             return sb.ToString();
         }
 
+        private static readonly object LogLock = new object();
+        private static readonly string LogPath =
+            Path.Combine(
+                Environment.GetFolderPath(
+                    Environment.SpecialFolder.LocalApplicationData),
+                "YAFD", "yafd.log");
+
         public static void Log(string format, params object[] args)
         {
 #if DEBUG
             Debug.Print("[YAFD] " + format, args);
+
+            string line = DateTime.UtcNow.ToString("o") + " " +        // ISO-8601
+                          string.Format(format, args);
+
+            lock (LogLock)
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(LogPath));
+                File.AppendAllText(LogPath, line + Environment.NewLine);
+            }
 #endif
         }
     }
