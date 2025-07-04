@@ -20,7 +20,7 @@ jobs:
         run: msbuild YAFD\YetAnotherFaviconDownloader.csproj /p:Configuration=Release
 
       - name: Package plugin
-        run: plgx-build.bat
+        run: plgx-build.ps1
 
       - name: Create GitHub Release
         id: create_release
